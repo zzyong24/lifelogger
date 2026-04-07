@@ -100,7 +100,21 @@ def record(hotkey: bool, toggle_key: str):
 
 
 @cli.command()
-@click.option("--date", "-d", default=None, help="处理日期 YYYY-MM-DD（默认今天）")
+@click.option("--poll", default=10, help="轮询间隔秒数（默认 10）")
+def watch(poll: int):
+    """监听录音目录，新文件完成后自动转写写入 Vault（配合 record 同时运行）."""
+    from pipeline.daily_pipeline import load_config
+    from pipeline.watch_pipeline import watch_and_transcribe
+
+    cfg = load_config()
+    console.print(f"[bold cyan]🔍 Watch 模式启动[/bold cyan]")
+    console.print(f"  监听目录: [dim]{cfg['storage']['recordings_dir']}[/dim]")
+    console.print(f"  Vault 输出: [dim]{cfg['vault']['output_dir']}[/dim]")
+    console.print(f"  轮询间隔: {poll}s\n")
+    console.print("[dim]新录音完成后自动转写并追加到 Vault（Ctrl+C 停止）[/dim]\n")
+    watch_and_transcribe(cfg["storage"]["recordings_dir"], cfg, poll_interval=poll)
+
+
 @click.option("--dry-run", is_flag=True, help="试运行，不写入 Vault")
 @click.option("--config", "-c", default=None, help="配置文件路径")
 def run(date: str | None, dry_run: bool, config: str | None):

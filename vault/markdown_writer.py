@@ -114,6 +114,87 @@ def segments_to_markdown(
     return "\n".join(frontmatter_lines + body_lines)
 
 
+def append_segments(
+    writer: "VaultWriter",
+    result,
+    date: datetime.date | None = None,
+) -> Path:
+    """将单个转写结果追加到当天 Vault 文件（文件不存在则创建）.
+
+    Args:
+        writer: VaultWriter 实例
+        result: TranscriptResult
+        date: 日期（默认今天）
+
+    Returns:
+        写入的文件路径
+    """
+    date = date or datetime.date.today()
+    filename = writer.filename_format.format(date=date.strftime("%Y-%m-%d"))
+    output_path = writer.output_dir / filename
+
+    if not result.segments:
+        return output_path
+
+    # 生成本次片段的 Markdown 块
+    lines: list[str] = []
+    current_speaker: str | None = None
+    current_block: list[str] = []
+    current_start: float = 0.0
+
+    def flush():
+        if current_block and current_speaker:
+            time_str = _format_time(current_start)
+            lines.append(f"**{current_speaker}** `{time_str}`")
+            lines.append(" ".join(current_block))
+            lines.append("")
+
+    for seg in result.segments:
+        if seg.speaker != current_speaker:
+            flush()
+            current_speaker = seg.speaker
+            current_block = [seg.text]
+            current_start = seg.start
+        else:
+            current_block.append(seg.text)
+    flush()
+
+    if not output_path.exists():
+        # 首次：创建带 frontmatter 的完整文件
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        date_str = date.strftime("%Y-%m-%d")
+        speakers_list = ", ".join(f'"{s}"' for s in {seg.speaker for seg in result.segments})
+        header = "\n".join([
+            "---",
+            'type: "note"',
+            'topic: "work"',
+            f'created: "{now}"',
+            f'modified: "{now}"',
+            'tags: ["lifelog", "work", "crafted"]',
+            'origin: "crafted"',
+            'source: "lifelogger"',
+            'status: "active"',
+            f'date: "{date_str}"',
+            f'speakers: [{speakers_list}]',
+            "---",
+            "",
+            f"# {date_str} 生活录音",
+            "",
+            f"> 生成时间：{now}",
+            "",
+            "---",
+            "",
+        ])
+        output_path.write_text(header + "\n".join(lines), encoding="utf-8")
+    else:
+        # 追加：直接 append 到文件末尾
+        with output_path.open("a", encoding="utf-8") as f:
+            f.write("\n" + "\n".join(lines))
+
+    logger.info(f"追加写入 Vault: {output_path.name} (+{len(result.segments)} 段)")
+    return output_path
+
+
 class VaultWriter:
     """将转写结果写入 Vault.
 
