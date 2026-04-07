@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+dist/
+
+# 配置（含私密信息）
+config/settings.local.yaml
+.env
+
+# 录音文件（不进 git）
+recordings/
+*.mp3
+*.wav
+*.m4a
+
+# 声纹特征（本地数据）
+speakers/
+~/.lifelogger/
+
+# 日志
+*.log
+/tmp/lifelogger*.log
+
+# macOS
+.DS_Store

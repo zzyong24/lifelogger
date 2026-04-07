@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+macOS 开机自启配置（launchd）
+
+安装步骤：
+  1. 编辑此文件，将 /PATH/TO/lifelogger 替换为实际路径
+  2. cp scripts/com.lifelogger.recorder.plist ~/Library/LaunchAgents/
+  3. launchctl load ~/Library/LaunchAgents/com.lifelogger.recorder.plist
+  4. launchctl start com.lifelogger.recorder
+
+卸载：
+  launchctl unload ~/Library/LaunchAgents/com.lifelogger.recorder.plist
+
+查看日志：
+  tail -f /tmp/lifelogger.out.log
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.lifelogger.recorder</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/PATH/TO/lifelogger/.venv/bin/python</string>
+        <string>/PATH/TO/lifelogger/main.py</string>
+        <string>record</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/PATH/TO/lifelogger</string>
+
+    <!-- 开机自动启动 -->
+    <key>RunAtLoad</key>
+    <true/>
+
+    <!-- 崩溃后自动重启 -->
+    <key>KeepAlive</key>
+    <true/>
+
+    <!-- 日志 -->
+    <key>StandardOutPath</key>
+    <string>/tmp/lifelogger.out.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/tmp/lifelogger.err.log</string>
+
+    <!-- 环境变量（如 HF_TOKEN） -->
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>HF_TOKEN</key>
+        <string>YOUR_HF_TOKEN_HERE</string>
+    </dict>
+</dict>
+</plist>

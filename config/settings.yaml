@@ -1,0 +1,59 @@
+# lifelogger 配置
+# 复制此文件为 config/settings.local.yaml 并填写私有配置
+
+audio:
+  # macOS: "BlackHole 2ch" / Linux: "default" / 硬件设备: "hw:1,0"
+  input_device: "BlackHole 2ch"
+  sample_rate: 16000          # whisper 标准采样率
+  channels: 1                 # 单声道，省空间
+  chunk_duration_seconds: 3600  # 每小时切一个文件
+  audio_format: "mp3"
+  bitrate: "32k"              # 16kHz 单声道 32k 足够
+
+storage:
+  # 原始录音存储目录
+  recordings_dir: "~/Library/Application Support/lifelogger/recordings"
+  # 声纹特征目录
+  speakers_dir: "~/.lifelogger/speakers"
+  # 保留原始录音天数（超过自动删除）
+  retention_days: 7
+
+whisper:
+  model_size: "large-v3"      # tiny/base/small/medium/large-v3
+  device: "cpu"               # cpu / cuda / mps（Apple Silicon）
+  compute_type: "int8"        # int8 省内存，量化推理
+  language: "zh"
+  word_timestamps: true
+
+diarization:
+  # pyannote 模型，需要 HuggingFace token
+  model: "pyannote/speaker-diarization-3.1"
+  # HF token 写在 config/settings.local.yaml 或环境变量 HF_TOKEN
+  hf_token: ""
+  # 声纹匹配阈值（0-1，越高越严格）
+  speaker_match_threshold: 0.82
+  # 最少说话人数 / 最多说话人数（-1 自动检测）
+  min_speakers: 1
+  max_speakers: -1
+
+silence:
+  # 静音检测灵敏度（0=最不敏感，3=最敏感）
+  vad_aggressiveness: 2
+  # 跳过静音比例超过此值的文件（节省转写时间）
+  skip_if_silence_ratio: 0.85
+  # 最短有效语音段（秒）
+  min_speech_duration: 5.0
+
+vault:
+  # Vault 输出目录（写入 daily-notes）
+  output_dir: "~/vault/space/crafted/work/lifelogs"
+  # 是否写入 Vault（false = 只输出到本地）
+  enabled: true
+  # 输出文件名格式
+  filename_format: "{date}_lifelogs.md"
+
+pipeline:
+  # 每天定时运行时间（cron 格式）
+  cron: "30 23 * * *"
+  # 并行转写进程数
+  workers: 2

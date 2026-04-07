@@ -1,0 +1,20 @@
+# 转写
+faster-whisper>=1.0.0
+
+# 声纹分离（需要 HuggingFace token）
+pyannote.audio>=3.1.0
+speechbrain>=1.0.0
+
+# 音频处理
+pydub>=0.25.0
+numpy>=1.24.0
+scipy>=1.11.0
+
+# 静音检测
+webrtcvad>=2.0.10
+
+# 工具
+python-dotenv>=1.0.0
+click>=8.1.0
+rich>=13.0.0
+pyyaml>=6.0
