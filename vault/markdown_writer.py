@@ -51,19 +51,20 @@ def segments_to_markdown(
         for seg in result.segments:
             all_speakers.add(seg.speaker)
 
+    speakers_list = ", ".join(f'"{s}"' for s in sorted(all_speakers))
     # frontmatter（ThirdSpace Vault 规范）
     frontmatter_lines = [
         "---",
-        f'type: "note"',
-        f'topic: "work"',
+        'type: "note"',
+        'topic: "work"',
         f'created: "{now}"',
         f'modified: "{now}"',
-        f'tags: ["lifelog", "work", "crafted"]',
-        f'origin: "crafted"',
-        f'source: "lifelogger"',
-        f'status: "active"',
+        'tags: ["lifelog", "work", "crafted"]',
+        'origin: "crafted"',
+        'source: "lifelogger"',
+        'status: "active"',
         f'date: "{date_str}"',
-        f'speakers: [{", ".join(f\'"{s}"\' for s in sorted(all_speakers))}]',
+        f'speakers: [{speakers_list}]',
         "---",
         "",
     ]

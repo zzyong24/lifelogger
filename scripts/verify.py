@@ -21,16 +21,16 @@ def check(name: str, fn) -> tuple[bool, str]:
 
 
 checks = [
-    ("ffmpeg", lambda: __import__("subprocess").check_output(
-        ["ffmpeg", "-version"], capture_output=True).returncode == 0 or "ok"),
+    ("ffmpeg", lambda: __import__("subprocess").run(
+        ["ffmpeg", "-version"], capture_output=True).returncode == 0 and "ok"),
 
-    ("click", lambda: __import__("click").__version__),
-    ("rich", lambda: __import__("rich").__version__),
+    ("click", lambda: __import__("importlib.metadata").metadata.version("click")),
+    ("rich", lambda: __import__("importlib.metadata").metadata.version("rich")),
     ("pyyaml", lambda: __import__("yaml").__version__),
 
     ("faster-whisper", lambda: __import__("faster_whisper").__version__),
 
-    ("pynput (热键，可选)", lambda: __import__("pynput").__version__),
+    ("pynput (热键，可选)", lambda: __import__("importlib.metadata").metadata.version("pynput")),
 
     ("webrtcvad (静音检测，可选)", lambda: __import__("webrtcvad") or "ok"),
 
