@@ -100,6 +100,22 @@ def record(hotkey: bool, toggle_key: str):
 
 
 @cli.command()
+@click.option("--date", "-d", default=None, help="处理日期 YYYY-MM-DD（默认今天）")
+@click.option("--dry-run", is_flag=True, help="试运行，不写入 Vault")
+@click.option("--config", "-c", default=None, help="配置文件路径")
+def run(date: str | None, dry_run: bool, config: str | None):
+    """运行日常流水线（声纹分离 + 转写 + 写入 Vault）."""
+    from pipeline.daily_pipeline import run_pipeline
+
+    target_date = datetime.date.fromisoformat(date) if date else datetime.date.today()
+    stats = run_pipeline(date=target_date, config_path=config, dry_run=dry_run)
+
+    console.print("\n[bold]统计[/bold]")
+    for k, v in stats.items():
+        console.print(f"  {k}: [cyan]{v}[/cyan]")
+
+
+@cli.command()
 @click.option("--poll", default=10, help="轮询间隔秒数（默认 10）")
 def watch(poll: int):
     """监听录音目录，新文件完成后自动转写写入 Vault（配合 record 同时运行）."""

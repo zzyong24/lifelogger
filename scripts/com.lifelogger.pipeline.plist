@@ -16,9 +16,8 @@
 
     <key>ProgramArguments</key>
     <array>
-        <string>/Users/zyongzhu/workbase/github/lifelogger/.venv/bin/python</string>
-        <string>/Users/zyongzhu/workbase/github/lifelogger/main.py</string>
-        <string>run</string>
+        <string>/bin/bash</string>
+        <string>/Users/zyongzhu/workbase/github/lifelogger/scripts/run_pipeline.sh</string>
     </array>
 
     <key>WorkingDirectory</key>
