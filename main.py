@@ -34,8 +34,16 @@ def cli():
 
 
 @cli.command()
-def record():
-    """启动后台持续录音（每小时切割一个文件）."""
+@click.option("--hotkey", is_flag=True, default=False,
+              help="热键模式：Ctrl+Shift+R 切换启停，Ctrl+Shift+Q 退出")
+@click.option("--toggle-key", default="<ctrl>+<shift>+r",
+              help="切换录音热键（默认 Ctrl+Shift+R）")
+def record(hotkey: bool, toggle_key: str):
+    """启动后台持续录音（每小时切割一个文件）.
+
+    普通模式: 立即开始录音，Ctrl+C 停止。
+    热键模式: --hotkey，Ctrl+Shift+R 切换启停，Ctrl+Shift+Q 退出。
+    """
     from pipeline.daily_pipeline import load_config
     from recorder.audio_recorder import AudioRecorder
 
@@ -49,11 +57,46 @@ def record():
         audio_format=cfg["audio"]["audio_format"],
         bitrate=cfg["audio"]["bitrate"],
     )
+
     console.print(f"[cyan]录音设备[/cyan]: {cfg['audio']['input_device']}")
     console.print(f"[cyan]存储目录[/cyan]: {recorder.recordings_dir}")
     console.print(f"[cyan]切割间隔[/cyan]: {cfg['audio']['chunk_duration_seconds'] // 60} 分钟")
-    console.print("\n[bold green]开始录音[/bold green]（Ctrl+C 停止）\n")
-    recorder.run_forever()
+
+    if hotkey:
+        import threading
+        from recorder.hotkey_controller import HotkeyController
+
+        record_thread: threading.Thread | None = None
+        stop_event = threading.Event()
+
+        def _start():
+            nonlocal record_thread, stop_event
+            stop_event.clear()
+            record_thread = threading.Thread(
+                target=recorder.run_forever,
+                kwargs={"stop_event": stop_event},
+                daemon=True,
+                name="recorder",
+            )
+            record_thread.start()
+
+        def _stop():
+            nonlocal stop_event
+            stop_event.set()
+
+        controller = HotkeyController(
+            on_start=_start,
+            on_stop=_stop,
+            toggle_combo=toggle_key,
+        )
+        console.print(f"\n[bold yellow]热键模式[/bold yellow]")
+        console.print(f"  [cyan]{toggle_key}[/cyan]       切换录音启停")
+        console.print(f"  [cyan]Ctrl+Shift+Q[/cyan]  退出\n")
+        console.print("[dim]macOS 需要在「系统设置 → 隐私与安全 → 辅助功能」中允许终端[/dim]\n")
+        controller.start()  # 阻塞，等热键事件
+    else:
+        console.print("\n[bold green]开始录音[/bold green]（Ctrl+C 停止）\n")
+        recorder.run_forever()
 
 
 @cli.command()

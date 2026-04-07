@@ -56,11 +56,15 @@ class AudioRecorder:
         import platform
 
         if platform.system() == "Darwin":
-            # macOS: avfoundation，捕获 BlackHole 虚拟声卡
+            # macOS: avfoundation
+            # 支持两种格式:
+            #   数字索引: "1" → ":1"（推荐，稳定）
+            #   设备名:   "BlackHole 2ch" → ":BlackHole 2ch"
+            audio_input = f":{self.input_device}"
             return [
                 "ffmpeg", "-y",
                 "-f", "avfoundation",
-                "-i", f":{self.input_device}",   # ":设备名" 表示音频输入
+                "-i", audio_input,   # ":设备名/索引" 表示纯音频输入
                 "-t", str(self.chunk_duration),
                 "-ac", str(self.channels),
                 "-ar", str(self.sample_rate),
@@ -96,10 +100,17 @@ class AudioRecorder:
             logger.error(f"录制失败: {e.stderr.decode()}")
             raise
 
-    def run_forever(self) -> None:
-        """持续录音，每个 chunk_duration 秒切割一个文件（阻塞）."""
+    def run_forever(self, stop_event=None) -> None:
+        """持续录音，每个 chunk_duration 秒切割一个文件（阻塞）.
+
+        Args:
+            stop_event: threading.Event，设置后停止录音（热键模式用）
+        """
         logger.info(f"启动持续录音 | 设备: {self.input_device} | 存储: {self.recordings_dir}")
         while True:
+            if stop_event and stop_event.is_set():
+                logger.info("录制停止（stop_event 触发）")
+                break
             try:
                 self.record_chunk()
             except KeyboardInterrupt:
